@@ -1,0 +1,20 @@
+self.addEventListener('install', function () { self.skipWaiting(); });
+self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
+self.addEventListener('push', function (e) {
+  var d = {};
+  try { d = e.data.json(); } catch (x) {}
+  e.waitUntil(self.registration.showNotification(d.titre || 'Mon Poulailler', {
+    body: d.corps || '',
+    icon: '/poulailler-web/icon-192.png',
+    badge: '/poulailler-web/icon-192.png',
+    data: { url: d.url || '/poulailler-web/' }
+  }));
+});
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  var url = (e.notification.data && e.notification.data.url) || '/poulailler-web/';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (l) {
+    for (var i = 0; i < l.length; i++) { if ('focus' in l[i]) return l[i].focus(); }
+    return self.clients.openWindow(url);
+  }));
+});
